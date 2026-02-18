@@ -1,0 +1,286 @@
+<!-- src/app/demo/pages/classes/classe-list/classe-list.component.html -->
+
+<div class="row">
+
+  <!-- ─── Header ────────────────────────────────────────────────────────── -->
+  <div class="col-12 mb-3">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div>
+        <h5 class="mb-1 fw-bold">Gestion des Classes</h5>
+        <p class="text-muted mb-0">{{ classes.length }} classe(s) enregistrée(s)</p>
+      </div>
+      <button class="btn btn-primary px-4" (click)="openModal()">
+        + &nbsp;Nouvelle Classe
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── Filtres ───────────────────────────────────────────────────────── -->
+  <div class="col-12 mb-3">
+    <app-card [hidHeader]="true" cardClass="mb-0">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-4">
+          <input type="text" class="form-control"
+                 placeholder="🔍  Rechercher une classe..."
+                 [(ngModel)]="searchTerm" (input)="filterClasses()">
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" [(ngModel)]="selectedNiveau" (change)="filterClasses()">
+            <option value="">Tous les niveaux</option>
+            <option *ngFor="let n of niveaux" [value]="n">{{ n }}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" [(ngModel)]="selectedAnnee" (change)="filterClasses()">
+            <option value="">Toutes les années</option>
+            <option value="2024-2025">2024-2025</option>
+            <option value="2025-2026">2025-2026</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-outline-secondary w-100" (click)="resetFilters()">
+            ↺ &nbsp;Réinitialiser
+          </button>
+        </div>
+      </div>
+    </app-card>
+  </div>
+
+  <!-- ─── Loader ────────────────────────────────────────────────────────── -->
+  <div class="col-12 text-center py-5" *ngIf="loading">
+    <div class="spinner-border text-primary"></div>
+    <p class="mt-2 text-muted">Chargement...</p>
+  </div>
+
+  <!-- ─── Empty ─────────────────────────────────────────────────────────── -->
+  <div class="col-12 text-center py-5" *ngIf="!loading && filteredClasses.length === 0">
+    <div class="empty-state-icon">🏫</div>
+    <h6 class="text-muted mt-2">Aucune classe trouvée</h6>
+    <button class="btn btn-primary mt-2" (click)="openModal()">Créer une classe</button>
+  </div>
+
+  <!-- ─── Cards ─────────────────────────────────────────────────────────── -->
+  <ng-container *ngIf="!loading && filteredClasses.length > 0">
+    <div class="col-xxl-3 col-xl-4 col-md-6" *ngFor="let classe of filteredClasses">
+      <div class="classe-card">
+
+        <div class="classe-card-header">
+          <div class="classe-icon">🏫</div>
+          <div class="dropdown">
+            <button class="comp-menu-btn" data-bs-toggle="dropdown">⋮</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="javascript:void(0)" (click)="viewProfesseurs(classe)">
+                👥 Professeurs</a></li>
+              <li><a class="dropdown-item" href="javascript:void(0)" (click)="openModal(classe)">
+                ✏️ Modifier</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="javascript:void(0)" (click)="deleteClasse(classe)">
+                🗑️ Supprimer</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <h5 class="classe-title">{{ classe.nom }}</h5>
+        <p class="classe-annee">{{ classe.anneeScolaire || 'Année non précisée' }}</p>
+
+        <span class="niveau-badge">{{ classe.niveau }}</span>
+
+        <div class="classe-card-footer">
+          <span class="participants-count">
+            👤 Capacité : <strong>{{ classe.capacite }}</strong>
+          </span>
+          <button class="btn btn-sm btn-outline-primary px-3" (click)="viewProfesseurs(classe)">
+            👥 Profs
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL — Création / Édition de classe
+════════════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="classeModal" tabindex="-1" #classeModal>
+  <div class="modal-dialog modal-dialog-centered" style="max-width:520px">
+    <div class="modal-content school-modal">
+
+      <div class="school-modal-header header-classe">
+        <div class="d-flex align-items-center gap-3">
+          <div class="school-modal-icon">🏫</div>
+          <div>
+            <h5 class="mb-0 fw-bold text-white">
+              {{ editMode ? 'Modifier la classe' : 'Nouvelle classe' }}
+            </h5>
+            <small class="text-white" style="opacity:.8">
+              {{ editMode ? 'Mettre à jour les informations' : 'Remplissez les informations ci-dessous' }}
+            </small>
+          </div>
+        </div>
+        <button class="school-modal-close" (click)="closeClasseModal()">✕</button>
+      </div>
+
+      <div class="school-modal-body">
+        <form [formGroup]="classeForm" autocomplete="off">
+          <div class="row g-3">
+
+            <div class="col-12">
+              <label class="school-label">🏷️ Nom de la classe *</label>
+              <input type="text" class="school-input"
+                     formControlName="nom"
+                     placeholder="Ex : 6ème A, Terminale S1, BTS 1..."
+                     [class.is-invalid]="isInvalid('nom')">
+              <div class="invalid-feedback">Le nom est obligatoire</div>
+            </div>
+
+            <div class="col-6">
+              <label class="school-label">📚 Niveau *</label>
+              <select class="school-input" formControlName="niveau" [class.is-invalid]="isInvalid('niveau')">
+                <option value="">Choisir...</option>
+                <option *ngFor="let n of niveaux" [value]="n">{{ n }}</option>
+              </select>
+              <div class="invalid-feedback">Obligatoire</div>
+            </div>
+
+            <div class="col-6">
+              <label class="school-label">👥 Capacité *</label>
+              <div class="input-group">
+                <input type="number" class="school-input rounded-end-0 border-end-0"
+                       formControlName="capacite" min="1" max="100"
+                       [class.is-invalid]="isInvalid('capacite')">
+                <span class="input-group-text bg-light" style="border-radius:0 10px 10px 0">élèves</span>
+                <div class="invalid-feedback">Entre 1 et 100</div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="school-label">📅 Année scolaire</label>
+              <select class="school-input" formControlName="anneeScolaire">
+                <option value="">Non précisée</option>
+                <option value="2024-2025">2024-2025</option>
+                <option value="2025-2026">2025-2026</option>
+              </select>
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+      <div class="school-modal-footer">
+        <button type="button" class="btn btn-light px-4" (click)="closeClasseModal()">Annuler</button>
+        <button type="button" class="btn btn-primary px-4 fw-semibold"
+                (click)="saveClasse()" [disabled]="saving">
+          <span class="spinner-border spinner-border-sm me-2" *ngIf="saving"></span>
+          {{ saving ? 'Enregistrement...' : (editMode ? '✔ Mettre à jour' : '✔ Créer la classe') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL — Professeurs
+════════════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="profsModal" tabindex="-1" #profsModal>
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content school-modal">
+
+      <div class="school-modal-header header-profs">
+        <div class="d-flex align-items-center gap-3">
+          <div class="school-modal-icon">👥</div>
+          <div>
+            <h5 class="mb-0 fw-bold text-white">Professeurs</h5>
+            <small class="text-white" style="opacity:.8">{{ selectedClasse?.nom }}</small>
+          </div>
+        </div>
+        <button class="school-modal-close" (click)="closeProfsModal()">✕</button>
+      </div>
+
+      <div class="school-modal-body">
+
+        <div class="d-flex justify-content-end mb-3">
+          <button class="btn btn-sm btn-primary px-3" (click)="openProfForm()">
+            + &nbsp;Ajouter un professeur
+          </button>
+        </div>
+
+        <!-- Form ajout -->
+        <div class="score-form-card mb-3" *ngIf="showProfForm">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="form-section-emoji">👤</span>
+            <span class="fw-semibold">Nouveau professeur</span>
+          </div>
+          <form [formGroup]="profForm">
+            <div class="row g-2">
+              <div class="col-md-6">
+                <input type="text" class="form-control form-control-sm" formControlName="nom"
+                       placeholder="Nom *" [class.is-invalid]="isProfInvalid('nom')">
+              </div>
+              <div class="col-md-6">
+                <input type="text" class="form-control form-control-sm" formControlName="prenom"
+                       placeholder="Prénom *" [class.is-invalid]="isProfInvalid('prenom')">
+              </div>
+              <div class="col-md-6">
+                <input type="text" class="form-control form-control-sm" formControlName="matiere"
+                       placeholder="Matière * (ex: Mathématiques)" [class.is-invalid]="isProfInvalid('matiere')">
+              </div>
+              <div class="col-md-6">
+                <input type="email" class="form-control form-control-sm" formControlName="email"
+                       placeholder="Email (optionnel)">
+              </div>
+              <div class="col-12 d-flex gap-2 justify-content-end pt-1">
+                <button class="btn btn-sm btn-outline-secondary px-3" (click)="showProfForm = false">Annuler</button>
+                <button class="btn btn-sm btn-primary px-3" (click)="saveProf()">✔ Enregistrer</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Loader -->
+        <div class="text-center py-3" *ngIf="loadingProfs">
+          <div class="spinner-border spinner-border-sm text-primary"></div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive rounded-3 border" *ngIf="!loadingProfs">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-3">Nom</th>
+                <th>Prénom</th>
+                <th>Matière</th>
+                <th>Email</th>
+                <th class="text-end pe-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let prof of professeurs">
+                <td class="fw-semibold ps-3">{{ prof.nom }}</td>
+                <td>{{ prof.prenom }}</td>
+                <td><span class="matiere-badge">{{ prof.matiere }}</span></td>
+                <td class="text-muted small">{{ prof.email || '—' }}</td>
+                <td class="text-end pe-3">
+                  <button class="btn btn-sm btn-outline-danger rounded-pill px-3" (click)="deleteProf(prof)">
+                    🗑️ Retirer
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="professeurs.length === 0">
+                <td colspan="5" class="text-center text-muted py-4">
+                  <div class="fs-2 mb-2">👨‍🏫</div>
+                  Aucun professeur dans cette classe
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="school-modal-footer">
+        <button type="button" class="btn btn-light px-4" (click)="closeProfsModal()">Fermer</button>
+      </div>
+
+    </div>
+  </div>
+</div>

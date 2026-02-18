@@ -1,0 +1,226 @@
+// ═══════════════════════════════════════════════════════
+// SHARED SCHOOL STYLES — classes module
+// ═══════════════════════════════════════════════════════
+
+// ── Empty state ──────────────────────────────────────
+.empty-state-icon { font-size: 3rem; }
+
+// ── Cards ────────────────────────────────────────────
+.classe-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #eee;
+  padding: 20px;
+  margin-bottom: 24px;
+  transition: transform .2s, box-shadow .2s;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0,0,0,.09);
+  }
+}
+
+.classe-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.classe-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.classe-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #1a1a2e;
+}
+
+.classe-annee {
+  font-size: .82rem;
+  color: #888;
+  margin: 0 0 12px;
+}
+
+.niveau-badge {
+  display: inline-block;
+  background: rgba(4, 169, 245, .12);
+  color: #0288d1;
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: .8rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.classe-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.participants-count {
+  font-size: .83rem;
+  color: #666;
+}
+
+// ── Dropdown button ───────────────────────────────────
+.comp-menu-btn {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #555;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  transition: background .15s;
+
+  &:hover { background: #e8e8e8; }
+}
+
+// ── Shared Modal styles ───────────────────────────────
+.school-modal {
+  border: none;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+}
+
+.school-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 24px;
+}
+
+.header-classe  { background: linear-gradient(135deg, #04a9f5, #0277bd); }
+.header-profs   { background: linear-gradient(135deg, #00c853, #00796b); }
+.header-competition { background: linear-gradient(135deg, #ff9800, #e65100); }
+.header-podium  { background: linear-gradient(135deg, #7c3aed, #4527a0); }
+
+.school-modal-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  background: rgba(255,255,255,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.school-modal-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.3);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .15s;
+
+  &:hover { background: rgba(255,255,255,.3); }
+}
+
+.school-modal-body {
+  padding: 24px;
+}
+
+.school-modal-footer {
+  padding: 0 24px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+// ── Form elements ─────────────────────────────────────
+.school-label {
+  font-size: .78rem;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.school-input {
+  width: 100%;
+  border-radius: 10px;
+  border: 1.5px solid #e0e0e0;
+  padding: 10px 14px;
+  font-size: .9rem;
+  background: #fafafa;
+  transition: border-color .2s, box-shadow .2s;
+  appearance: auto;
+
+  &:focus {
+    border-color: #04a9f5;
+    box-shadow: 0 0 0 3px rgba(4,169,245,.12);
+    background: #fff;
+    outline: none;
+  }
+
+  &.is-invalid {
+    border-color: #dc3545;
+    background: #fff8f8;
+  }
+}
+
+// ── Inline form cards ─────────────────────────────────
+.score-form-card {
+  background: #f8f9ff;
+  border: 1.5px dashed #b0bec5;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.form-section-emoji {
+  font-size: 1.2rem;
+}
+
+.form-label-xs {
+  font-size: .75rem;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 4px;
+  display: block;
+}
+
+// ── Table badges ──────────────────────────────────────
+.matiere-badge {
+  background: rgba(0,200,83,.1);
+  color: #00796b;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+.score-badge {
+  background: #1976d2;
+  color: #fff;
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: .85rem;
+  font-weight: 600;
+}

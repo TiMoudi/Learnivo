@@ -271,6 +271,30 @@ const NavigationItems = [
         icon: 'feather icon-sidebar'
       }
     ]
+  },
+  {
+    id: 'ecole',
+    title: 'École',
+    type: 'group',
+    icon: 'icon-navigation',
+    children: [
+      {
+        id: 'classes',
+        title: 'Gestion des Classes',
+        type: 'item',
+        url: '/classes',
+        icon: 'ti ti-building-school',
+        breadcrumbs: false
+      },
+      {
+        id: 'competition',
+        title: 'Compétitions',
+        type: 'item',
+        url: '/competition',
+        icon: 'ti ti-trophy',
+        breadcrumbs: false
+      }
+    ]
   }
 ];
 

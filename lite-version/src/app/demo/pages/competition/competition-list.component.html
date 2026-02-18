@@ -1,0 +1,324 @@
+<!-- src/app/demo/pages/competition/competition-list/competition-list.component.html -->
+
+<div class="row">
+
+  <!-- ─── Header ────────────────────────────────────────────────────────── -->
+  <div class="col-12 mb-3">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div>
+        <h5 class="mb-1 fw-bold">Gestion des Compétitions</h5>
+        <p class="text-muted mb-0">{{ competitions.length }} compétition(s)</p>
+      </div>
+      <button class="btn btn-primary px-4" (click)="openModal()">
+        + &nbsp;Nouvelle Compétition
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── Stats ─────────────────────────────────────────────────────────── -->
+  <div class="col-12 mb-3" *ngIf="!loading && competitions.length > 0">
+    <div class="row g-3">
+      <div class="col-6 col-md-3" *ngFor="let stat of stats">
+        <app-card [hidHeader]="true" cardClass="mb-0 text-center">
+          <div class="comp-stat-icon mx-auto mb-2" [style.background]="stat.bg">
+            <span class="stat-emoji">{{ stat.emoji }}</span>
+          </div>
+          <h4 class="mb-0 fw-bold">{{ stat.count }}</h4>
+          <small class="text-muted">{{ stat.label }}</small>
+        </app-card>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Filtres ───────────────────────────────────────────────────────── -->
+  <div class="col-12 mb-3">
+    <app-card [hidHeader]="true" cardClass="mb-0">
+      <div class="row g-2 align-items-center">
+        <div class="col-md-4">
+          <input type="text" class="form-control"
+                 placeholder="🔍  Rechercher une compétition..."
+                 [(ngModel)]="searchTerm" (input)="filterCompetitions()">
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" [(ngModel)]="selectedType" (change)="filterCompetitions()">
+            <option value="">Tous les types</option>
+            <option *ngFor="let t of types" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" [(ngModel)]="sortOrder" (change)="filterCompetitions()">
+            <option value="date-desc">Date ↓ récent</option>
+            <option value="date-asc">Date ↑ ancien</option>
+            <option value="nom">Nom A→Z</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-outline-secondary w-100" (click)="resetFilters()">
+            ↺ &nbsp;Reset
+          </button>
+        </div>
+      </div>
+    </app-card>
+  </div>
+
+  <!-- ─── Loader ────────────────────────────────────────────────────────── -->
+  <div class="col-12 text-center py-5" *ngIf="loading">
+    <div class="spinner-border text-primary"></div>
+    <p class="mt-2 text-muted">Chargement...</p>
+  </div>
+
+  <!-- ─── Empty ─────────────────────────────────────────────────────────── -->
+  <div class="col-12 text-center py-5" *ngIf="!loading && filteredCompetitions.length === 0">
+    <div class="empty-state-icon">🏆</div>
+    <h6 class="text-muted mt-2">Aucune compétition trouvée</h6>
+    <button class="btn btn-primary mt-2" (click)="openModal()">Créer une compétition</button>
+  </div>
+
+  <!-- ─── Cards ─────────────────────────────────────────────────────────── -->
+  <ng-container *ngIf="!loading && filteredCompetitions.length > 0">
+    <div class="col-xl-4 col-md-6" *ngFor="let comp of filteredCompetitions">
+      <div class="comp-card">
+
+        <!-- Top row -->
+        <div class="comp-card-header">
+          <span class="type-badge" [class]="getTypeClass(comp)">
+            {{ getTypeEmoji(comp.type) }} {{ comp.type }}
+          </span>
+          <div class="dropdown">
+            <button class="comp-menu-btn" data-bs-toggle="dropdown">⋮</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="javascript:void(0)" (click)="viewClassement(comp)">
+                🏅 Classement</a></li>
+              <li><a class="dropdown-item" href="javascript:void(0)" (click)="openModal(comp)">
+                ✏️ Modifier</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="javascript:void(0)" (click)="deleteCompetition(comp)">
+                🗑️ Supprimer</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <h5 class="comp-title">{{ comp.nom }}</h5>
+        <p class="comp-desc">{{ comp.description || 'Aucune description' }}</p>
+
+        <div class="comp-meta">
+          <span class="meta-item">📅 {{ comp.date | date:'dd/MM/yyyy' }}</span>
+          <span class="meta-item" *ngIf="comp.lieu">📍 {{ comp.lieu }}</span>
+        </div>
+
+        <div class="comp-card-footer">
+          <span class="participants-count">
+            👥 <strong>{{ getParticipantsCount(comp) }}</strong> participant(s)
+          </span>
+          <button class="btn btn-sm btn-primary px-3" (click)="viewClassement(comp)">
+            🏅 Classement
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL — Création / Édition compétition
+════════════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="compModal" tabindex="-1" #compModal>
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content school-modal">
+
+      <!-- Header -->
+      <div class="school-modal-header header-competition">
+        <div class="d-flex align-items-center gap-3">
+          <div class="school-modal-icon">🏆</div>
+          <div>
+            <h5 class="mb-0 fw-bold text-white">
+              {{ editMode ? 'Modifier la compétition' : 'Nouvelle compétition' }}
+            </h5>
+            <small class="text-white" style="opacity:.8">
+              {{ editMode ? 'Mettre à jour les informations' : 'Remplissez les informations ci-dessous' }}
+            </small>
+          </div>
+        </div>
+        <button class="school-modal-close" (click)="closeCompModal()">✕</button>
+      </div>
+
+      <!-- Body -->
+      <div class="school-modal-body">
+        <form [formGroup]="compForm" autocomplete="off">
+          <div class="row g-3">
+
+            <div class="col-12">
+              <label class="school-label">🏷️ Nom de la compétition *</label>
+              <input type="text" class="school-input"
+                     formControlName="nom"
+                     placeholder="Ex : Tournoi de Football, Olympiade des Maths..."
+                     [class.is-invalid]="isInvalid('nom')">
+              <div class="invalid-feedback">Le nom est obligatoire</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="school-label">🎯 Type *</label>
+              <select class="school-input" formControlName="type" [class.is-invalid]="isInvalid('type')">
+                <option value="">Choisir un type...</option>
+                <option *ngFor="let t of types" [value]="t">{{ t }}</option>
+              </select>
+              <div class="invalid-feedback">Obligatoire</div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="school-label">📅 Date *</label>
+              <input type="date" class="school-input"
+                     formControlName="date"
+                     [class.is-invalid]="isInvalid('date')">
+              <div class="invalid-feedback">La date est obligatoire</div>
+            </div>
+
+            <div class="col-12">
+              <label class="school-label">📍 Lieu</label>
+              <input type="text" class="school-input"
+                     formControlName="lieu"
+                     placeholder="Ex : Gymnase principal, Salle polyvalente...">
+            </div>
+
+            <div class="col-12">
+              <label class="school-label">📝 Description</label>
+              <textarea class="school-input" rows="3"
+                        formControlName="description"
+                        placeholder="Décrivez brièvement la compétition..."></textarea>
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="school-modal-footer">
+        <button type="button" class="btn btn-light px-4" (click)="closeCompModal()">Annuler</button>
+        <button type="button" class="btn btn-warning text-white px-4 fw-semibold"
+                (click)="saveCompetition()" [disabled]="saving">
+          <span class="spinner-border spinner-border-sm me-2" *ngIf="saving"></span>
+          {{ saving ? 'Enregistrement...' : (editMode ? '✔ Mettre à jour' : '✔ Créer la compétition') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MODAL — Classement
+════════════════════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="classementModal" tabindex="-1" #classementModal>
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content school-modal">
+
+      <div class="school-modal-header header-podium">
+        <div class="d-flex align-items-center gap-3">
+          <div class="school-modal-icon">🏅</div>
+          <div>
+            <h5 class="mb-0 fw-bold text-white">Classement</h5>
+            <small class="text-white" style="opacity:.8">{{ selectedComp?.nom }}</small>
+          </div>
+        </div>
+        <button class="school-modal-close" (click)="closeClassementModal()">✕</button>
+      </div>
+
+      <div class="school-modal-body">
+
+        <div class="d-flex justify-content-end mb-3">
+          <button class="btn btn-sm btn-primary px-3" (click)="showScoreForm = !showScoreForm">
+            + &nbsp;Inscrire un élève
+          </button>
+        </div>
+
+        <!-- Formulaire score -->
+        <div class="score-form-card mb-3" *ngIf="showScoreForm">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="form-section-emoji">👤</span>
+            <span class="fw-semibold">Ajouter un participant</span>
+          </div>
+          <form [formGroup]="scoreForm">
+            <div class="row g-2 align-items-end">
+              <div class="col-md-2">
+                <label class="form-label form-label-xs">ID élève *</label>
+                <input type="number" class="form-control form-control-sm" formControlName="eleveId"
+                       placeholder="ID" [class.is-invalid]="isScoreInvalid('eleveId')">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label form-label-xs">Nom</label>
+                <input type="text" class="form-control form-control-sm" formControlName="eleveNom" placeholder="Nom">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label form-label-xs">Prénom</label>
+                <input type="text" class="form-control form-control-sm" formControlName="elevePrenom" placeholder="Prénom">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label form-label-xs">Score *</label>
+                <input type="number" class="form-control form-control-sm" formControlName="score"
+                       placeholder="0" min="0" [class.is-invalid]="isScoreInvalid('score')">
+              </div>
+              <div class="col-md-3 d-flex gap-1 pt-1">
+                <button class="btn btn-sm btn-outline-secondary flex-fill" (click)="showScoreForm = false">Annuler</button>
+                <button class="btn btn-sm btn-primary flex-fill" (click)="saveScore()">✔ OK</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Loader -->
+        <div class="text-center py-3" *ngIf="loadingClassement">
+          <div class="spinner-border spinner-border-sm text-primary"></div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive rounded-3 border" *ngIf="!loadingClassement">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="text-center ps-3" style="width:70px">Rang</th>
+                <th>Élève</th>
+                <th class="text-center">Score</th>
+                <th>Commentaire</th>
+                <th class="text-end pe-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let cl of classements">
+                <td class="text-center ps-3">
+                  <span *ngIf="cl.rang === 1" class="fs-4">🥇</span>
+                  <span *ngIf="cl.rang === 2" class="fs-4">🥈</span>
+                  <span *ngIf="cl.rang === 3" class="fs-4">🥉</span>
+                  <span *ngIf="cl.rang! > 3" class="badge bg-secondary">{{ cl.rang }}</span>
+                </td>
+                <td>
+                  <div class="fw-semibold">{{ cl.eleveNom || '—' }} {{ cl.elevePrenom || '' }}</div>
+                  <small class="text-muted">ID : {{ cl.eleveId }}</small>
+                </td>
+                <td class="text-center">
+                  <span class="score-badge">{{ cl.score }} pts</span>
+                </td>
+                <td class="text-muted small">{{ cl.commentaire || '—' }}</td>
+                <td class="text-end pe-3">
+                  <button class="btn btn-sm btn-outline-danger rounded-pill px-3" (click)="deleteScore(cl)">
+                    🗑️ Retirer
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="classements.length === 0">
+                <td colspan="5" class="text-center text-muted py-4">
+                  <div class="fs-2 mb-2">🏆</div>
+                  Aucun participant pour l'instant
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="school-modal-footer">
+        <button type="button" class="btn btn-light px-4" (click)="closeClassementModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>

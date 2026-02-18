@@ -48,6 +48,16 @@ const routes: Routes = [
       {
         path: 'events',
         loadChildren: () => import('./demo/pages/events/events.module').then(module => module.EventsModule)
+      },
+      {
+        path: 'classes',
+        loadChildren: () =>
+          import('./demo/pages/classes/classes.module').then(m => m.ClassesModule)
+      },
+      {
+        path: 'competition',
+        loadChildren: () =>
+          import('./demo/pages/competition/competition.module').then(m => m.CompetitionModule)
       }
     ]
   },

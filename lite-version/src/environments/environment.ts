@@ -4,6 +4,7 @@
 
 export const environment = {
   production: false,
+  // Toutes les requêtes passent par l'API Gateway sur le port 8080
   apiUrl: 'http://localhost:8080/api'
 };
 
