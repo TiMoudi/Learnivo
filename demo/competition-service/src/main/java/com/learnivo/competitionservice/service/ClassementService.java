@@ -1,5 +1,8 @@
 package com.learnivo.competitionservice.service;
 
+import com.learnivo.competitionservice.client.ClassServiceClient;
+import com.learnivo.competitionservice.dto.ClassementRequest;
+import com.learnivo.competitionservice.dto.ProfesseurResponse;
 import com.learnivo.competitionservice.entity.Classement;
 import com.learnivo.competitionservice.entity.Competition;
 import com.learnivo.competitionservice.exception.DuplicateResourceException;
@@ -7,6 +10,8 @@ import com.learnivo.competitionservice.exception.ResourceNotFoundException;
 import com.learnivo.competitionservice.repository.ClassementRepository;
 import com.learnivo.competitionservice.repository.CompetitionRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,8 +23,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Transactional
 public class ClassementService {
 
-    private final ClassementRepository classementRepository;
+    private static final Logger log = LoggerFactory.getLogger(ClassementService.class);
+
+    private final ClassementRepository  classementRepository;
     private final CompetitionRepository competitionRepository;
+    private final ClassServiceClient    classServiceClient;  // Feign injecté
 
     @Transactional(readOnly = true)
     public List<Classement> findByCompetition(Long competitionId) {
@@ -38,41 +46,62 @@ public class ClassementService {
                         "Classement non trouvé avec l'id: " + id));
     }
 
-    public Classement save(Classement classement) {
-        // Vérifier que la compétition existe
-        Competition competition = competitionRepository.findById(classement.getCompetition().getId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Compétition non trouvée avec l'id: " + classement.getCompetition().getId()));
+    public Classement saveFromRequest(ClassementRequest req) {
 
-        // Vérifier qu'un élève n'est inscrit qu'une fois par compétition
+        // 1. Charger la compétition
+        Competition competition = competitionRepository.findById(req.getCompetitionId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Compétition non trouvée avec l'id: " + req.getCompetitionId()));
+
+        // 2. Vérifier qu'un élève n'est inscrit qu'une fois
         if (classementRepository.existsByCompetitionIdAndEleveId(
-                competition.getId(), classement.getEleveId())) {
+                competition.getId(), req.getEleveId())) {
             throw new DuplicateResourceException(
-                    "L'élève " + classement.getEleveId() +
+                    "L'élève " + req.getEleveId() +
                     " est déjà inscrit à la compétition " + competition.getNom());
         }
 
-        classement.setCompetition(competition);
+        // 3. Enrichissement via Feign depuis class-service
+        //    Si le front n'envoie pas nom/prénom → on les récupère automatiquement
+        String eleveNom    = req.getEleveNom();
+        String elevePrenom = req.getElevePrenom();
+
+        if (eleveNom == null || eleveNom.isBlank()) {
+            try {
+                ProfesseurResponse prof = classServiceClient.getProfesseurById(req.getEleveId());
+                if (prof != null) {
+                    eleveNom    = prof.getNom();
+                    elevePrenom = prof.getPrenom();
+                    log.info("[Feign] Enrichissement OK — {} {}", eleveNom, elevePrenom);
+                }
+            } catch (Exception e) {
+                // class-service indisponible → on continue sans enrichissement
+                log.warn("[Feign] class-service indisponible, enrichissement ignoré : {}", e.getMessage());
+            }
+        }
+
+        Classement classement = Classement.builder()
+                .eleveId(req.getEleveId())
+                .eleveNom(eleveNom)
+                .elevePrenom(elevePrenom)
+                .score(req.getScore())
+                .commentaire(req.getCommentaire())
+                .competition(competition)
+                .build();
+
         Classement saved = classementRepository.save(classement);
-
-        // Recalcul automatique des rangs pour cette compétition
         recalculerRangs(competition.getId());
-
         return saved;
     }
 
-    public Classement update(Long id, Classement updated) {
+    public Classement updateFromRequest(Long id, ClassementRequest req) {
         Classement existing = findById(id);
-        existing.setScore(updated.getScore());
-        existing.setCommentaire(updated.getCommentaire());
-        existing.setEleveNom(updated.getEleveNom());
-        existing.setElevePrenom(updated.getElevePrenom());
-
+        existing.setScore(req.getScore());
+        existing.setCommentaire(req.getCommentaire());
+        existing.setEleveNom(req.getEleveNom());
+        existing.setElevePrenom(req.getElevePrenom());
         Classement saved = classementRepository.save(existing);
-
-        // Recalcul automatique des rangs
         recalculerRangs(existing.getCompetition().getId());
-
         return saved;
     }
 
@@ -83,17 +112,10 @@ public class ClassementService {
         recalculerRangs(competitionId);
     }
 
-    /**
-     * Recalcule et sauvegarde les rangs de tous les participants
-     * d'une compétition en fonction de leur score (décroissant)
-     */
     private void recalculerRangs(Long competitionId) {
         List<Classement> classements = classementRepository
                 .findByCompetitionIdOrderByRangAsc(competitionId);
-
-        // Trier par score décroissant
         classements.sort((a, b) -> b.getScore().compareTo(a.getScore()));
-
         AtomicInteger rang = new AtomicInteger(1);
         classements.forEach(c -> {
             c.setRang(rang.getAndIncrement());

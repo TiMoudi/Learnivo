@@ -1,0 +1,53 @@
+<!-- ─── Barre de pagination — à insérer dans les deux templates ───────────
+     Variables attendues dans le composant :
+       currentPage, totalPages, totalElements, pageSize
+     Méthodes : goToPage(n), changeSize(n), pages (getter)
+──────────────────────────────────────────────────────────────────────── -->
+
+<div class="pagination-bar" *ngIf="totalPages > 0">
+
+  <!-- Info -->
+  <div class="pagination-info">
+    Page <strong>{{ currentPage + 1 }}</strong> / {{ totalPages }}
+    &nbsp;·&nbsp; <strong>{{ totalElements }}</strong> résultat(s)
+  </div>
+
+  <!-- Contrôles -->
+  <div class="pagination-controls">
+
+    <!-- Taille page -->
+    <select class="page-size-select" [(ngModel)]="pageSize" (change)="changeSize(pageSize)">
+      <option [value]="6">6 / page</option>
+      <option [value]="9">9 / page</option>
+      <option [value]="12">12 / page</option>
+      <option [value]="24">24 / page</option>
+    </select>
+
+    <!-- Boutons pages -->
+    <div class="page-buttons">
+
+      <!-- Précédent -->
+      <button class="page-btn" [disabled]="currentPage === 0" (click)="goToPage(currentPage - 1)">
+        ‹
+      </button>
+
+      <!-- Numéros (affiche max 5 pages autour de la courante) -->
+      <ng-container *ngFor="let p of pages">
+        <button *ngIf="p === 0 || p === totalPages - 1 || (p >= currentPage - 2 && p <= currentPage + 2)"
+                class="page-btn"
+                [class.active]="p === currentPage"
+                (click)="goToPage(p)">
+          {{ p + 1 }}
+        </button>
+        <!-- Ellipse -->
+        <span *ngIf="p === currentPage - 3 || p === currentPage + 3" class="page-ellipsis">…</span>
+      </ng-container>
+
+      <!-- Suivant -->
+      <button class="page-btn" [disabled]="currentPage >= totalPages - 1" (click)="goToPage(currentPage + 1)">
+        ›
+      </button>
+
+    </div>
+  </div>
+</div>

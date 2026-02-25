@@ -73,6 +73,30 @@ const NavigationItems = [
     ]
   },
   {
+    id: 'ecole',
+    title: 'École',
+    type: 'group',
+    icon: 'icon-navigation',
+    children: [
+      {
+        id: 'classes',
+        title: 'Gestion des Classes',
+        type: 'item',
+        url: '/classes',
+        icon: 'ti ti-building-school',
+        breadcrumbs: false
+      },
+      {
+        id: 'competition',
+        title: 'Compétitions',
+        type: 'item',
+        url: '/competition',
+        icon: 'ti ti-trophy',
+        breadcrumbs: false
+      }
+    ]
+  },
+  {
     id: 'ui-element',
     title: 'UI ELEMENT',
     type: 'group',
@@ -269,30 +293,6 @@ const NavigationItems = [
         url: '/sample-page',
         classes: 'nav-item',
         icon: 'feather icon-sidebar'
-      }
-    ]
-  },
-  {
-    id: 'ecole',
-    title: 'École',
-    type: 'group',
-    icon: 'icon-navigation',
-    children: [
-      {
-        id: 'classes',
-        title: 'Gestion des Classes',
-        type: 'item',
-        url: '/classes',
-        icon: 'ti ti-building-school',
-        breadcrumbs: false
-      },
-      {
-        id: 'competition',
-        title: 'Compétitions',
-        type: 'item',
-        url: '/competition',
-        icon: 'ti ti-trophy',
-        breadcrumbs: false
       }
     ]
   }

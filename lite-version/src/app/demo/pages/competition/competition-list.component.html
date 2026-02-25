@@ -7,7 +7,7 @@
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
       <div>
         <h5 class="mb-1 fw-bold">Gestion des Compétitions</h5>
-        <p class="text-muted mb-0">{{ competitions.length }} compétition(s)</p>
+        <p class="text-muted mb-0">{{ totalElements }} compétition(s)</p>
       </div>
       <button class="btn btn-primary px-4" (click)="openModal()">
         + &nbsp;Nouvelle Compétition
@@ -37,19 +37,18 @@
         <div class="col-md-4">
           <input type="text" class="form-control"
                  placeholder="🔍  Rechercher une compétition..."
-                 [(ngModel)]="searchTerm" (input)="filterCompetitions()">
+                 [(ngModel)]="searchTerm" (input)="onSearchChange()">
         </div>
         <div class="col-md-3">
-          <select class="form-select" [(ngModel)]="selectedType" (change)="filterCompetitions()">
+          <select class="form-select" [(ngModel)]="selectedType" (change)="onSearchChange()">
             <option value="">Tous les types</option>
             <option *ngFor="let t of types" [value]="t">{{ t }}</option>
           </select>
         </div>
         <div class="col-md-3">
-          <select class="form-select" [(ngModel)]="sortOrder" (change)="filterCompetitions()">
-            <option value="date-desc">Date ↓ récent</option>
-            <option value="date-asc">Date ↑ ancien</option>
-            <option value="nom">Nom A→Z</option>
+          <select class="form-select" [(ngModel)]="sortDir" (change)="onFilterChange()">
+            <option value="desc">Date ↓ récent</option>
+            <option value="asc">Date ↑ ancien</option>
           </select>
         </div>
         <div class="col-md-2">
@@ -68,15 +67,15 @@
   </div>
 
   <!-- ─── Empty ─────────────────────────────────────────────────────────── -->
-  <div class="col-12 text-center py-5" *ngIf="!loading && filteredCompetitions.length === 0">
+  <div class="col-12 text-center py-5" *ngIf="!loading && competitions.length === 0">
     <div class="empty-state-icon">🏆</div>
     <h6 class="text-muted mt-2">Aucune compétition trouvée</h6>
     <button class="btn btn-primary mt-2" (click)="openModal()">Créer une compétition</button>
   </div>
 
   <!-- ─── Cards ─────────────────────────────────────────────────────────── -->
-  <ng-container *ngIf="!loading && filteredCompetitions.length > 0">
-    <div class="col-xl-4 col-md-6" *ngFor="let comp of filteredCompetitions">
+  <ng-container *ngIf="!loading && competitions.length > 0">
+    <div class="col-xl-4 col-md-6" *ngFor="let comp of competitions">
       <div class="comp-card">
 
         <!-- Top row -->
@@ -118,6 +117,57 @@
       </div>
     </div>
   </ng-container>
+</div>
+<!-- ─── Pagination ─────────────────────────────────────────── -->
+<div class="col-12 mt-3" *ngIf="!loading && totalPages > 0">
+
+  <div class="pagination-bar d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+    <!-- Info -->
+    <div class="pagination-info">
+      Page <strong>{{ currentPage + 1 }}</strong> / {{ totalPages }}
+      · <strong>{{ totalElements }}</strong> résultat(s)
+    </div>
+
+    <!-- Controls -->
+    <div class="d-flex align-items-center gap-2">
+
+      <!-- Taille -->
+      <select class="form-select form-select-sm w-auto"
+              [(ngModel)]="pageSize"
+              (change)="changeSize(pageSize)">
+        <option [value]="6">6</option>
+        <option [value]="9">9</option>
+        <option [value]="12">12</option>
+        <option [value]="24">24</option>
+      </select>
+
+      <!-- Previous -->
+      <button class="btn btn-sm btn-outline-secondary"
+              [disabled]="currentPage === 0"
+              (click)="goToPage(currentPage - 1)">
+        ‹
+      </button>
+
+      <!-- Pages -->
+      <ng-container *ngFor="let p of pages">
+        <button class="btn btn-sm"
+                [class.btn-primary]="p === currentPage"
+                [class.btn-outline-secondary]="p !== currentPage"
+                (click)="goToPage(p)">
+          {{ p + 1 }}
+        </button>
+      </ng-container>
+
+      <!-- Next -->
+      <button class="btn btn-sm btn-outline-secondary"
+              [disabled]="currentPage >= totalPages - 1"
+              (click)="goToPage(currentPage + 1)">
+        ›
+      </button>
+
+    </div>
+  </div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════════

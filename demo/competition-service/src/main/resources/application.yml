@@ -20,6 +20,11 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: false
+
 eureka:
   client:
     service-url:
@@ -31,3 +36,4 @@ eureka:
 logging:
   level:
     com.learnivo: DEBUG
+    com.learnivo.competitionservice.client: DEBUG

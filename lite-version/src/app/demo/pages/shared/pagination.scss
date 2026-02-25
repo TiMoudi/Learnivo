@@ -1,0 +1,77 @@
+// ── Barre de pagination ──────────────────────────────────────────────────────
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 4px 4px;
+  margin-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.pagination-info {
+  font-size: .83rem;
+  color: #888;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-size-select {
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: .82rem;
+  color: #555;
+  background: #fafafa;
+  cursor: pointer;
+
+  &:focus { outline: none; border-color: #04a9f5; }
+}
+
+.page-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-btn {
+  min-width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1.5px solid #e0e0e0;
+  background: #fff;
+  color: #555;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  padding: 0 8px;
+
+  &:hover:not(:disabled) {
+    background: #f0f8ff;
+    border-color: #04a9f5;
+    color: #04a9f5;
+  }
+
+  &.active {
+    background: #04a9f5;
+    border-color: #04a9f5;
+    color: #fff;
+  }
+
+  &:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+  }
+}
+
+.page-ellipsis {
+  color: #aaa;
+  font-size: .9rem;
+  padding: 0 2px;
+}

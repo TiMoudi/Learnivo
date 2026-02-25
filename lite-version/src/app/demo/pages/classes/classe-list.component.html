@@ -22,19 +22,18 @@
         <div class="col-md-4">
           <input type="text" class="form-control"
                  placeholder="🔍  Rechercher une classe..."
-                 [(ngModel)]="searchTerm" (input)="filterClasses()">
+                 [(ngModel)]="searchTerm" (input)="onSearchChange()">
         </div>
         <div class="col-md-3">
-          <select class="form-select" [(ngModel)]="selectedNiveau" (change)="filterClasses()">
+          <select class="form-select" [(ngModel)]="selectedNiveau" (change)="onSearchChange()">
             <option value="">Tous les niveaux</option>
             <option *ngFor="let n of niveaux" [value]="n">{{ n }}</option>
           </select>
         </div>
         <div class="col-md-3">
-          <select class="form-select" [(ngModel)]="selectedAnnee" (change)="filterClasses()">
-            <option value="">Toutes les années</option>
-            <option value="2024-2025">2024-2025</option>
-            <option value="2025-2026">2025-2026</option>
+          <select class="form-select" [(ngModel)]="sortDir" (change)="onFilterChange()">
+            <option value="asc">Nom A → Z</option>
+            <option value="desc">Nom Z → A</option>
           </select>
         </div>
         <div class="col-md-2">
@@ -53,15 +52,15 @@
   </div>
 
   <!-- ─── Empty ─────────────────────────────────────────────────────────── -->
-  <div class="col-12 text-center py-5" *ngIf="!loading && filteredClasses.length === 0">
+  <div class="col-12 text-center py-5" *ngIf="!loading && classes.length === 0">
     <div class="empty-state-icon">🏫</div>
     <h6 class="text-muted mt-2">Aucune classe trouvée</h6>
     <button class="btn btn-primary mt-2" (click)="openModal()">Créer une classe</button>
   </div>
 
   <!-- ─── Cards ─────────────────────────────────────────────────────────── -->
-  <ng-container *ngIf="!loading && filteredClasses.length > 0">
-    <div class="col-xxl-3 col-xl-4 col-md-6" *ngFor="let classe of filteredClasses">
+  <ng-container *ngIf="!loading && classes.length > 0">
+    <div class="col-xxl-3 col-xl-4 col-md-6" *ngFor="let classe of classes">
       <div class="classe-card">
 
         <div class="classe-card-header">
@@ -97,7 +96,57 @@
     </div>
   </ng-container>
 </div>
+<!-- ─── Pagination ─────────────────────────────────────────── -->
+<div class="col-12 mt-3" *ngIf="!loading && totalPages > 0">
 
+  <div class="pagination-bar d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+    <!-- Info -->
+    <div class="pagination-info">
+      Page <strong>{{ currentPage + 1 }}</strong> / {{ totalPages }}
+      · <strong>{{ totalElements }}</strong> résultat(s)
+    </div>
+
+    <!-- Controls -->
+    <div class="d-flex align-items-center gap-2">
+
+      <!-- Taille -->
+      <select class="form-select form-select-sm w-auto"
+              [(ngModel)]="pageSize"
+              (change)="changeSize(pageSize)">
+        <option [value]="6">6</option>
+        <option [value]="9">9</option>
+        <option [value]="12">12</option>
+        <option [value]="24">24</option>
+      </select>
+
+      <!-- Previous -->
+      <button class="btn btn-sm btn-outline-secondary"
+              [disabled]="currentPage === 0"
+              (click)="goToPage(currentPage - 1)">
+        ‹
+      </button>
+
+      <!-- Pages -->
+      <ng-container *ngFor="let p of pages">
+        <button class="btn btn-sm"
+                [class.btn-primary]="p === currentPage"
+                [class.btn-outline-secondary]="p !== currentPage"
+                (click)="goToPage(p)">
+          {{ p + 1 }}
+        </button>
+      </ng-container>
+
+      <!-- Next -->
+      <button class="btn btn-sm btn-outline-secondary"
+              [disabled]="currentPage >= totalPages - 1"
+              (click)="goToPage(currentPage + 1)">
+        ›
+      </button>
+
+    </div>
+  </div>
+</div>
 <!-- ════════════════════════════════════════════════════════════════════════
      MODAL — Création / Édition de classe
 ════════════════════════════════════════════════════════════════════════ -->

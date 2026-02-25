@@ -1,19 +1,34 @@
-// src/app/demo/pages/competition/services/competition.service.ts
 
+// src/app/demo/pages/competition/services/competition.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Competition, Classement } from './competition.model';
+import { PageResponse } from '../shared/page-response.model';
 import { environment } from 'src/environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class CompetitionService {
-  private compUrl = `${environment.apiUrl}/competitions`;
+
+  private compUrl       = `${environment.apiUrl}/competitions`;
   private classementUrl = `${environment.apiUrl}/classements`;
 
   constructor(private http: HttpClient) {}
 
-  // ─── Compétitions ────────────────────────────────────────────────────────────
+  // ─── Compétitions ─────────────────────────────────────────────────────────
+
+  getCompetitionsPaginated(
+    page = 0, size = 9,
+    sortBy = 'date', sortDir = 'desc',
+    type?: string, search?: string
+  ): Observable<PageResponse<Competition>> {
+    let params = new HttpParams()
+      .set('page', String(page)).set('size', String(size))
+      .set('sortBy', sortBy).set('sortDir', sortDir);
+    if (type)   params = params.set('type', type);
+    if (search) params = params.set('search', search);
+    return this.http.get<PageResponse<Competition>>(this.compUrl, { params });
+  }
 
   getAllCompetitions(type?: string): Observable<Competition[]> {
     let params = new HttpParams();
@@ -37,7 +52,7 @@ export class CompetitionService {
     return this.http.delete<void>(`${this.compUrl}/${id}`);
   }
 
-  // ─── Classements ─────────────────────────────────────────────────────────────
+  // ─── Classements ──────────────────────────────────────────────────────────
 
   getClassementsByCompetition(competitionId: number): Observable<Classement[]> {
     return this.http.get<Classement[]>(this.classementUrl, {
@@ -45,18 +60,8 @@ export class CompetitionService {
     });
   }
 
-  getClassementsByEleve(eleveId: number): Observable<Classement[]> {
-    return this.http.get<Classement[]>(this.classementUrl, {
-      params: new HttpParams().set('eleveId', String(eleveId))
-    });
-  }
-
-  addClassement(classement: Classement): Observable<Classement> {
-    return this.http.post<Classement>(this.classementUrl, classement);
-  }
-
-  updateClassement(id: number, classement: Classement): Observable<Classement> {
-    return this.http.put<Classement>(`${this.classementUrl}/${id}`, classement);
+  addClassement(cl: any): Observable<Classement> {
+    return this.http.post<Classement>(this.classementUrl, cl);
   }
 
   deleteClassement(id: number): Observable<void> {

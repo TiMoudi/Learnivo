@@ -1,5 +1,6 @@
 package com.learnivo.competitionservice.controller;
 
+import com.learnivo.competitionservice.dto.ClassementRequest;
 import com.learnivo.competitionservice.entity.Classement;
 import com.learnivo.competitionservice.service.ClassementService;
 import jakarta.validation.Valid;
@@ -17,43 +18,34 @@ public class ClassementController {
 
     private final ClassementService classementService;
 
-    // GET /api/classements?competitionId=1
-    // GET /api/classements?eleveId=5
     @GetMapping
     public ResponseEntity<List<Classement>> getAll(
             @RequestParam(required = false) Long competitionId,
             @RequestParam(required = false) Long eleveId) {
-        if (competitionId != null) {
-            return ResponseEntity.ok(classementService.findByCompetition(competitionId));
-        }
-        if (eleveId != null) {
-            return ResponseEntity.ok(classementService.findByEleve(eleveId));
-        }
+        if (competitionId != null) return ResponseEntity.ok(classementService.findByCompetition(competitionId));
+        if (eleveId      != null) return ResponseEntity.ok(classementService.findByEleve(eleveId));
         return ResponseEntity.badRequest().build();
     }
 
-    // GET /api/classements/{id}
     @GetMapping("/{id}")
     public ResponseEntity<Classement> getById(@PathVariable Long id) {
         return ResponseEntity.ok(classementService.findById(id));
     }
 
-    // POST /api/classements
+    // ← Reçoit ClassementRequest (DTO) au lieu de l'entité Classement
     @PostMapping
-    public ResponseEntity<Classement> create(@Valid @RequestBody Classement classement) {
+    public ResponseEntity<Classement> create(@Valid @RequestBody ClassementRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(classementService.save(classement));
+                .body(classementService.saveFromRequest(request));
     }
 
-    // PUT /api/classements/{id}
     @PutMapping("/{id}")
     public ResponseEntity<Classement> update(
             @PathVariable Long id,
-            @Valid @RequestBody Classement classement) {
-        return ResponseEntity.ok(classementService.update(id, classement));
+            @Valid @RequestBody ClassementRequest request) {
+        return ResponseEntity.ok(classementService.updateFromRequest(id, request));
     }
 
-    // DELETE /api/classements/{id}
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         classementService.delete(id);
