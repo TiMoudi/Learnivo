@@ -1,9 +1,16 @@
 package com.esprit.backend.controller;
 
+import com.esprit.backend.dto.CourseRatingRequest;
 import com.esprit.backend.entity.Course;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.esprit.backend.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,10 +19,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +37,9 @@ public class CourseController {
 
     @Autowired
     private CourseService courseService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @GetMapping
     public ResponseEntity<List<Course>> getAllCourses() {
@@ -39,10 +53,53 @@ public class CourseController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<Course> createCourse(@RequestBody Course course) {
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Course> createCourseJson(@RequestBody Course course) {
         Course createdCourse = courseService.createCourse(course);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCourse);
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Course> createCourse(
+            @RequestPart("course") String courseJson,
+            @RequestPart(value = "pdfFile", required = false) MultipartFile pdfFile) {
+        try {
+            Course course = objectMapper.readValue(courseJson, Course.class);
+
+            if (pdfFile != null && !pdfFile.isEmpty()) {
+                String contentType = pdfFile.getContentType();
+                boolean isPdf = MediaType.APPLICATION_PDF_VALUE.equalsIgnoreCase(contentType)
+                        || (pdfFile.getOriginalFilename() != null
+                        && pdfFile.getOriginalFilename().toLowerCase().endsWith(".pdf"));
+                if (!isPdf) {
+                    return ResponseEntity.badRequest().build();
+                }
+            }
+
+            Course createdCourse = courseService.createCourseWithPdf(course, pdfFile);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdCourse);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<Resource> getCoursePdf(@PathVariable Long id, @RequestParam("file") String file) {
+        Optional<Path> pathOpt = courseService.resolveCoursePdfPath(id, file);
+        if (pathOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Path path = pathOpt.get();
+        Resource resource = new FileSystemResource(path);
+        if (!resource.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename(path.getFileName().toString()).build().toString())
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(resource);
     }
 
     @PutMapping("/{id}")
@@ -78,5 +135,18 @@ public class CourseController {
     @GetMapping("/search")
     public ResponseEntity<List<Course>> searchCoursesByTitle(@RequestParam String title) {
         return ResponseEntity.ok(courseService.searchCoursesByName(title));
+    }
+
+    @PostMapping("/{id}/ratings")
+    public ResponseEntity<Course> submitCourseRating(@PathVariable Long id, @RequestBody CourseRatingRequest request) {
+        try {
+            Course updatedCourse = courseService.submitCourseRating(id, request.getStudentId(), request.getRating());
+            if (updatedCourse == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(updatedCourse);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

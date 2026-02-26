@@ -55,7 +55,6 @@ export class ExportService {
           `Level: ${course.level}`,
           `Category: ${course.category}`,
           `Instructor: ${course.instructor}`,
-          `Price: $${course.price}`,
           `Duration: ${course.duration}`,
           `Lessons: ${course.lessons}`
         ];
@@ -105,7 +104,6 @@ export class ExportService {
         `Level: ${course.level}`,
         `Category: ${course.category}`,
         `Instructor: ${course.instructor}`,
-        `Price: $${course.price}`,
         `Duration: ${course.duration}`,
         `Number of Lessons: ${course.lessons}`,
         `Generated: ${new Date().toLocaleDateString()}`

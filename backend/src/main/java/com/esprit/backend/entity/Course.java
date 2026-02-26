@@ -1,6 +1,7 @@
 package com.esprit.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,9 +25,6 @@ public class Course {
     @Column(name = "level", length = 50)
     private String level; // Beginner, Intermediate, Advanced
 
-    @Column(name = "price", nullable = false)
-    private Double price;
-
     @Column(name = "duration", length = 100)
     private String duration; // ex: "40 hours", "6 weeks"
 
@@ -49,6 +47,11 @@ public class Course {
     @JsonAlias("imageUrl")
     private String imageUrl;
 
+    @Column(name = "pdf_url", columnDefinition = "TEXT")
+    @JsonProperty("pdf_url")
+    @JsonAlias("pdfUrl")
+    private String pdfUrl;
+
     @Column(name = "lessons", nullable = false)
     private Integer lessons = 0;
 
@@ -65,6 +68,10 @@ public class Course {
 
     @Column(name = "category", length = 100)
     private String category;
+
+    @JsonIgnore
+    @Column(name = "price")
+    private Double price = 0.0;
 
 }
 

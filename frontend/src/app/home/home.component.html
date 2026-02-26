@@ -9,7 +9,9 @@
                 <li class="nav-item"><a class="nav-link" href="#about">Why learnivo</a></li>
                 <li class="nav-item"><a class="nav-link" href="#services">Programs</a></li>
                 <li class="nav-item"><a class="nav-link" href="#portfolio">Student Success</a></li>
-                <li class="nav-item"><a class="nav-link" routerLink="/dashboard">Backoffice</a></li>
+                @if (isAdmin) {
+                    <li class="nav-item"><a class="nav-link" routerLink="/dashboard">Backoffice</a></li>
+                }
                 <li class="nav-item"><a class="nav-link btn btn-light btn-sm ms-2" routerLink="/courses" style="color: #2D5757; font-weight: bold;">Enroll Now</a></li>
             </ul>
         </div>

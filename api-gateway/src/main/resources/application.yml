@@ -1,4 +1,4 @@
-﻿server:
+server:
   port: 8080
 
 spring:
@@ -9,10 +9,14 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: course-service-route
+        - id: course-hello-route
           uri: lb://course-service
           predicates:
             - Path=/course/**
+        - id: course-api-route
+          uri: lb://course-service
+          predicates:
+            - Path=/api/courses/**
 
 eureka:
   client:

@@ -16,8 +16,6 @@ public class CourseDTO {
 
     private String level;
 
-    private Double price;
-
     private String duration;
 
     private String description;
@@ -31,6 +29,9 @@ public class CourseDTO {
 
     @JsonProperty("image_url")
     private String imageUrl;
+
+    @JsonProperty("pdf_url")
+    private String pdfUrl;
 
     private Integer lessons;
 

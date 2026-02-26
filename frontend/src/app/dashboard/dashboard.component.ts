@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -16,21 +16,20 @@ interface CategoryStat {
 interface CourseForm {
   name: string;
   level: string;
-  price: number;
   duration: string;
   description: string;
   instructor: string;
   lessons: number;
   category: string;
   image_url: string;
+  pdf_url: string;
 }
 
 @Component({
-  selector: 'app-dashboard',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss'
+    selector: 'app-dashboard',
+    imports: [FormsModule, RouterLink],
+    templateUrl: './dashboard.component.html',
+    styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements OnInit {
   courses: Course[] = [];
@@ -40,7 +39,6 @@ export class DashboardComponent implements OnInit {
   totalCourses = 0;
   totalStudents = 0;
   averageRating = 0;
-  averagePrice = 0;
   pieGradient = 'conic-gradient(#2D5757 0deg 360deg)';
 
   showAddForm = false;
@@ -50,31 +48,32 @@ export class DashboardComponent implements OnInit {
   newCourseForm: CourseForm = {
     name: '',
     level: 'Beginner',
-    price: 0,
     duration: '',
     description: '',
     instructor: '',
     lessons: 0,
     category: 'Beginner',
-    image_url: ''
+    image_url: '',
+    pdf_url: ''
   };
   newCourseSubmitted = false;
   newCourseErrors: Partial<Record<keyof CourseForm, string>> = {};
+  selectedNewCoursePdfFile: File | null = null;
 
   editCourseForm: CourseForm & { id: number } = {
     id: 0,
     name: '',
     level: 'Beginner',
-    price: 0,
     duration: '',
     description: '',
     instructor: '',
     lessons: 0,
     category: 'Beginner',
-    image_url: ''
+    image_url: '',
+    pdf_url: ''
   };
   searchTerm = '';
-  sortCriteria: 'name' | 'price' | 'rating' | 'students_enrolled' | 'category' = 'name';
+  sortCriteria: 'name' | 'rating' | 'students_enrolled' | 'category' = 'name';
   sortDirection: 'asc' | 'desc' = 'asc';
 
   private readonly categoryColors = ['#2D5757', '#E76F51', '#2A9D8F', '#E9C46A', '#F4A261', '#457B9D', '#8AB17D', '#D62828'];
@@ -134,7 +133,6 @@ export class DashboardComponent implements OnInit {
     const payload: Omit<Course, 'id'> = {
       name: this.newCourseForm.name,
       level: this.newCourseForm.level,
-      price: this.newCourseForm.price,
       duration: this.newCourseForm.duration,
       description: this.newCourseForm.description,
       instructor: this.newCourseForm.instructor,
@@ -145,10 +143,11 @@ export class DashboardComponent implements OnInit {
       language: 'English',
       certificate: true,
       category: this.newCourseForm.category,
+      pdf_url: '',
       startDate: new Date().toISOString().split('T')[0]
     };
 
-    this.courseApiService.addCourse(payload).subscribe(() => {
+    this.courseApiService.addCourse(payload, this.selectedNewCoursePdfFile ?? undefined).subscribe(() => {
       this.resetNewCourseForm();
       this.showAddForm = false;
       this.loadCourses();
@@ -161,13 +160,13 @@ export class DashboardComponent implements OnInit {
       id: course.id,
       name: course.name,
       level: course.level,
-      price: course.price,
       duration: course.duration,
       description: course.description,
       instructor: course.instructor,
       lessons: course.lessons,
       category: course.category,
-      image_url: course.image_url
+      image_url: course.image_url,
+      pdf_url: course.pdf_url || ''
     };
     this.showEditForm = true;
     this.showAddForm = false;
@@ -178,21 +177,21 @@ export class DashboardComponent implements OnInit {
       return;
     }
 
-    if (!this.editCourseForm.name || !this.editCourseForm.instructor || this.editCourseForm.price <= 0) {
-      alert('Please fill in Name, Instructor, and valid Price.');
+    if (!this.editCourseForm.name || !this.editCourseForm.instructor) {
+      alert('Please fill in Name and Instructor.');
       return;
     }
 
     const payload: Partial<Course> = {
       name: this.editCourseForm.name,
       level: this.editCourseForm.level,
-      price: this.editCourseForm.price,
       duration: this.editCourseForm.duration,
       description: this.editCourseForm.description,
       instructor: this.editCourseForm.instructor,
       lessons: this.editCourseForm.lessons,
       category: this.editCourseForm.category,
-      image_url: this.editCourseForm.image_url
+      image_url: this.editCourseForm.image_url,
+      pdf_url: this.editCourseForm.pdf_url
     };
 
     this.courseApiService.updateCourse(this.editingCourseId, payload).subscribe(() => {
@@ -207,8 +206,13 @@ export class DashboardComponent implements OnInit {
       return;
     }
 
-    this.courseApiService.deleteCourse(course.id).subscribe(() => {
-      this.loadCourses();
+    this.courseApiService.deleteCourse(course.id).subscribe({
+      next: () => {
+        this.loadCourses();
+      },
+      error: () => {
+        alert('Unable to delete course. Please try again.');
+      }
     });
   }
 
@@ -216,14 +220,15 @@ export class DashboardComponent implements OnInit {
     this.newCourseForm = {
       name: '',
       level: 'Beginner',
-      price: 0,
       duration: '',
       description: '',
       instructor: '',
       lessons: 0,
       category: 'Beginner',
-      image_url: ''
+      image_url: '',
+      pdf_url: ''
     };
+    this.selectedNewCoursePdfFile = null;
     this.newCourseSubmitted = false;
     this.newCourseErrors = {};
   }
@@ -255,6 +260,25 @@ export class DashboardComponent implements OnInit {
     reader.readAsDataURL(file);
   }
 
+  onNewCoursePdfSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      this.newCourseErrors.pdf_url = 'Please choose a valid PDF file.';
+      return;
+    }
+
+    this.selectedNewCoursePdfFile = file;
+    this.newCourseForm.pdf_url = file.name;
+    this.newCourseErrors.pdf_url = '';
+    this.onNewCourseFieldChange();
+  }
+
   cancelAddCourse(): void {
     this.showAddForm = false;
     this.resetNewCourseForm();
@@ -267,7 +291,8 @@ export class DashboardComponent implements OnInit {
       instructor: this.newCourseForm.instructor.trim(),
       duration: this.newCourseForm.duration.trim(),
       description: this.newCourseForm.description.trim(),
-      image_url: this.newCourseForm.image_url.trim()
+      image_url: this.newCourseForm.image_url.trim(),
+      pdf_url: this.newCourseForm.pdf_url.trim()
     };
 
     const errors: Partial<Record<keyof CourseForm, string>> = {};
@@ -296,12 +321,6 @@ export class DashboardComponent implements OnInit {
       errors.duration = 'Duration must not exceed 40 characters.';
     }
 
-    if (!Number.isFinite(this.newCourseForm.price) || this.newCourseForm.price <= 0) {
-      errors.price = 'Price must be greater than 0.';
-    } else if (this.newCourseForm.price > 10000) {
-      errors.price = 'Price must be less than or equal to 10000.';
-    }
-
     if (!Number.isInteger(this.newCourseForm.lessons) || this.newCourseForm.lessons <= 0) {
       errors.lessons = 'Lessons must be a positive integer.';
     } else if (this.newCourseForm.lessons > 500) {
@@ -314,6 +333,9 @@ export class DashboardComponent implements OnInit {
 
     if (this.newCourseForm.image_url && !this.isValidImageValue(this.newCourseForm.image_url)) {
       errors.image_url = 'Image must be a valid URL or uploaded image file.';
+    }
+    if (this.newCourseForm.pdf_url && !this.selectedNewCoursePdfFile) {
+      errors.pdf_url = 'Please upload a PDF file.';
     }
 
     this.newCourseErrors = errors;
@@ -330,7 +352,7 @@ export class DashboardComponent implements OnInit {
 
   private getSortableValue(
     course: Course,
-    criteria: 'name' | 'price' | 'rating' | 'students_enrolled' | 'category'
+    criteria: 'name' | 'rating' | 'students_enrolled' | 'category'
   ): string | number {
     return course[criteria] ?? '';
   }
@@ -340,9 +362,6 @@ export class DashboardComponent implements OnInit {
     this.totalStudents = courses.reduce((sum, course) => sum + (course.students_enrolled || 0), 0);
     this.averageRating = this.totalCourses
       ? Number((courses.reduce((sum, course) => sum + (course.rating || 0), 0) / this.totalCourses).toFixed(1))
-      : 0;
-    this.averagePrice = this.totalCourses
-      ? Math.round(courses.reduce((sum, course) => sum + (course.price || 0), 0) / this.totalCourses)
       : 0;
 
     const counts = new Map<string, { count: number; students: number }>();

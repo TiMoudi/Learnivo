@@ -36,10 +36,9 @@
           (ngModelChange)="applyFilters()"
           type="text"
           placeholder="Search courses..."
-        />
+          />
         <select [(ngModel)]="sortCriteria" (ngModelChange)="applyFilters()">
           <option value="name">Sort by Name</option>
-          <option value="price">Sort by Price</option>
           <option value="rating">Sort by Rating</option>
           <option value="students_enrolled">Sort by Students</option>
           <option value="category">Sort by Category</option>
@@ -52,152 +51,152 @@
       <p class="result-count">{{ filteredCourses.length }} result(s)</p>
     </section>
 
-    <section class="form-panel" *ngIf="showAddForm">
-      <h3>Add New Course</h3>
-      <div class="field">
-        <label>Course Name *</label>
-        <input [(ngModel)]="newCourseForm.name" (ngModelChange)="onNewCourseFieldChange()" placeholder="e.g., Advanced Business English" maxlength="100" />
-        <small class="field-error" *ngIf="newCourseErrors.name">{{ newCourseErrors.name }}</small>
-      </div>
-
-      <div class="form-grid two-col">
+    @if (showAddForm) {
+      <section class="form-panel">
+        <h3>Add New Course</h3>
         <div class="field">
-          <label>Level *</label>
-          <select [(ngModel)]="newCourseForm.level" (ngModelChange)="onNewCourseFieldChange()">
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
-          </select>
+          <label>Course Name *</label>
+          <input [(ngModel)]="newCourseForm.name" (ngModelChange)="onNewCourseFieldChange()" placeholder="e.g., Advanced Business English" maxlength="100" />
+          @if (newCourseErrors.name) {
+            <small class="field-error">{{ newCourseErrors.name }}</small>
+          }
+        </div>
+        <div class="form-grid two-col">
+          <div class="field">
+            <label>Level *</label>
+            <select [(ngModel)]="newCourseForm.level" (ngModelChange)="onNewCourseFieldChange()">
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Category *</label>
+            <select [(ngModel)]="newCourseForm.category" (ngModelChange)="onNewCourseFieldChange()">
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Professional">Professional</option>
+              <option value="Certification">Certification</option>
+              <option value="Kids">Kids</option>
+            </select>
+          </div>
         </div>
         <div class="field">
-          <label>Category *</label>
-          <select [(ngModel)]="newCourseForm.category" (ngModelChange)="onNewCourseFieldChange()">
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Professional">Professional</option>
-            <option value="Certification">Certification</option>
-            <option value="Kids">Kids</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Instructor Name *</label>
-        <input [(ngModel)]="newCourseForm.instructor" (ngModelChange)="onNewCourseFieldChange()" placeholder="e.g., Ahmed Ben Ali" maxlength="80" />
-        <small class="field-error" *ngIf="newCourseErrors.instructor">{{ newCourseErrors.instructor }}</small>
-      </div>
-
-      <div class="form-grid two-col">
-        <div class="field">
-          <label>Price (TND) *</label>
-          <input type="number" [(ngModel)]="newCourseForm.price" (ngModelChange)="onNewCourseFieldChange()" min="1" max="10000" placeholder="e.g., 250" />
-          <small class="field-error" *ngIf="newCourseErrors.price">{{ newCourseErrors.price }}</small>
+          <label>Instructor Name *</label>
+          <input [(ngModel)]="newCourseForm.instructor" (ngModelChange)="onNewCourseFieldChange()" placeholder="e.g., Ahmed Ben Ali" maxlength="80" />
+          @if (newCourseErrors.instructor) {
+            <small class="field-error">{{ newCourseErrors.instructor }}</small>
+          }
         </div>
         <div class="field">
           <label>Duration *</label>
           <input [(ngModel)]="newCourseForm.duration" (ngModelChange)="onNewCourseFieldChange()" maxlength="40" placeholder="e.g., 12 weeks" />
-          <small class="field-error" *ngIf="newCourseErrors.duration">{{ newCourseErrors.duration }}</small>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Number of Lessons *</label>
-        <input type="number" [(ngModel)]="newCourseForm.lessons" (ngModelChange)="onNewCourseFieldChange()" min="1" max="500" placeholder="e.g., 48" />
-        <small class="field-error" *ngIf="newCourseErrors.lessons">{{ newCourseErrors.lessons }}</small>
-      </div>
-
-      <div class="field">
-        <label>Description</label>
-        <textarea [(ngModel)]="newCourseForm.description" (ngModelChange)="onNewCourseFieldChange()" maxlength="500" placeholder="Course description..."></textarea>
-        <small class="field-error" *ngIf="newCourseErrors.description">{{ newCourseErrors.description }}</small>
-      </div>
-
-      <div class="field">
-        <label>Image URL (optional)</label>
-        <input [(ngModel)]="newCourseForm.image_url" (ngModelChange)="onNewCourseFieldChange()" placeholder="https://example.com/course-image.jpg" />
-        <small class="field-error" *ngIf="newCourseErrors.image_url">{{ newCourseErrors.image_url }}</small>
-      </div>
-
-      <div class="field">
-        <label>Or Upload Image</label>
-        <input type="file" accept="image/*" (change)="onNewCourseImageSelected($event)" />
-      </div>
-
-      <div class="image-preview" *ngIf="newCourseForm.image_url">
-        <img [src]="newCourseForm.image_url" alt="New course preview" />
-      </div>
-
-      <div class="actions">
-        <button class="main-btn" (click)="addCourse()">Add Course</button>
-        <button class="ghost-btn" (click)="cancelAddCourse()">Cancel</button>
-      </div>
-    </section>
-
-    <section class="form-panel" *ngIf="showEditForm">
-      <h3>Edit Course</h3>
-      <div class="field">
-        <label>Course Name *</label>
-        <input [(ngModel)]="editCourseForm.name" placeholder="e.g., Advanced Business English" />
-      </div>
-
-      <div class="form-grid two-col">
-        <div class="field">
-          <label>Level *</label>
-          <select [(ngModel)]="editCourseForm.level">
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
-          </select>
+          @if (newCourseErrors.duration) {
+            <small class="field-error">{{ newCourseErrors.duration }}</small>
+          }
         </div>
         <div class="field">
-          <label>Category *</label>
-          <select [(ngModel)]="editCourseForm.category">
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Professional">Professional</option>
-            <option value="Certification">Certification</option>
-            <option value="Kids">Kids</option>
-          </select>
+          <label>Number of Lessons *</label>
+          <input type="number" [(ngModel)]="newCourseForm.lessons" (ngModelChange)="onNewCourseFieldChange()" min="1" max="500" placeholder="e.g., 48" />
+          @if (newCourseErrors.lessons) {
+            <small class="field-error">{{ newCourseErrors.lessons }}</small>
+          }
         </div>
-      </div>
-
-      <div class="field">
-        <label>Instructor Name *</label>
-        <input [(ngModel)]="editCourseForm.instructor" placeholder="e.g., Ahmed Ben Ali" />
-      </div>
-
-      <div class="form-grid two-col">
         <div class="field">
-          <label>Price (TND) *</label>
-          <input type="number" [(ngModel)]="editCourseForm.price" placeholder="e.g., 250" />
+          <label>Description</label>
+          <textarea [(ngModel)]="newCourseForm.description" (ngModelChange)="onNewCourseFieldChange()" maxlength="500" placeholder="Course description..."></textarea>
+          @if (newCourseErrors.description) {
+            <small class="field-error">{{ newCourseErrors.description }}</small>
+          }
+        </div>
+        <div class="field">
+          <label>Image URL (optional)</label>
+          <input [(ngModel)]="newCourseForm.image_url" (ngModelChange)="onNewCourseFieldChange()" placeholder="https://example.com/course-image.jpg" />
+          @if (newCourseErrors.image_url) {
+            <small class="field-error">{{ newCourseErrors.image_url }}</small>
+          }
+        </div>
+        <div class="field">
+          <label>Upload Course PDF (optional)</label>
+          <input type="file" accept="application/pdf,.pdf" (change)="onNewCoursePdfSelected($event)" />
+          @if (newCourseErrors.pdf_url) {
+            <small class="field-error">{{ newCourseErrors.pdf_url }}</small>
+          }
+        </div>
+        <div class="field">
+          <label>Or Upload Image</label>
+          <input type="file" accept="image/*" (change)="onNewCourseImageSelected($event)" />
+        </div>
+        @if (newCourseForm.image_url) {
+          <div class="image-preview">
+            <img [src]="newCourseForm.image_url" alt="New course preview" />
+          </div>
+        }
+        <div class="actions">
+          <button class="main-btn" (click)="addCourse()">Add Course</button>
+          <button class="ghost-btn" (click)="cancelAddCourse()">Cancel</button>
+        </div>
+      </section>
+    }
+
+    @if (showEditForm) {
+      <section class="form-panel">
+        <h3>Edit Course</h3>
+        <div class="field">
+          <label>Course Name *</label>
+          <input [(ngModel)]="editCourseForm.name" placeholder="e.g., Advanced Business English" />
+        </div>
+        <div class="form-grid two-col">
+          <div class="field">
+            <label>Level *</label>
+            <select [(ngModel)]="editCourseForm.level">
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Category *</label>
+            <select [(ngModel)]="editCourseForm.category">
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Professional">Professional</option>
+              <option value="Certification">Certification</option>
+              <option value="Kids">Kids</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Instructor Name *</label>
+          <input [(ngModel)]="editCourseForm.instructor" placeholder="e.g., Ahmed Ben Ali" />
         </div>
         <div class="field">
           <label>Duration *</label>
           <input [(ngModel)]="editCourseForm.duration" placeholder="e.g., 12 weeks" />
         </div>
-      </div>
-
-      <div class="field">
-        <label>Number of Lessons *</label>
-        <input type="number" [(ngModel)]="editCourseForm.lessons" placeholder="e.g., 48" />
-      </div>
-
-      <div class="field">
-        <label>Description</label>
-        <textarea [(ngModel)]="editCourseForm.description" placeholder="Course description..."></textarea>
-      </div>
-
-      <div class="actions">
-        <button class="main-btn" (click)="saveEditCourse()">Update</button>
-        <button class="ghost-btn" (click)="showEditForm = false">Cancel</button>
-      </div>
-    </section>
+        <div class="field">
+          <label>Number of Lessons *</label>
+          <input type="number" [(ngModel)]="editCourseForm.lessons" placeholder="e.g., 48" />
+        </div>
+        <div class="field">
+          <label>Description</label>
+          <textarea [(ngModel)]="editCourseForm.description" placeholder="Course description..."></textarea>
+        </div>
+        <div class="field">
+          <label>Course PDF URL (optional)</label>
+          <input [(ngModel)]="editCourseForm.pdf_url" placeholder="assets/pdfs/course.pdf or https://.../course.pdf" />
+        </div>
+        <div class="actions">
+          <button class="main-btn" (click)="saveEditCourse()">Update</button>
+          <button class="ghost-btn" (click)="showEditForm = false">Cancel</button>
+        </div>
+      </section>
+    }
 
     <div class="stats-grid">
       <article class="stat-card"><h3>Total Courses</h3><p>{{ totalCourses }}</p></article>
       <article class="stat-card"><h3>Total Enrollments</h3><p>{{ totalStudents }}</p></article>
       <article class="stat-card"><h3>Average Rating</h3><p>{{ averageRating }}/5</p></article>
-      <article class="stat-card"><h3>Average Price</h3><p>{{ averagePrice }} TND</p></article>
     </div>
 
     <div class="visual-grid">
@@ -210,14 +209,19 @@
       </article>
       <article class="panel">
         <div class="panel-title">Category Breakdown</div>
-        <div class="legend-list" *ngIf="categoryStats.length; else noData">
-          <div class="legend-row" *ngFor="let stat of categoryStats; trackBy: trackByCategory">
-            <span class="dot" [style.backgroundColor]="stat.color"></span>
-            <div class="label">{{ stat.name }}</div>
-            <div class="metrics">{{ stat.count }} courses | {{ stat.percentage }}%</div>
+        @if (categoryStats.length) {
+          <div class="legend-list">
+            @for (stat of categoryStats; track trackByCategory($index, stat)) {
+              <div class="legend-row">
+                <span class="dot" [style.backgroundColor]="stat.color"></span>
+                <div class="label">{{ stat.name }}</div>
+                <div class="metrics">{{ stat.count }} courses | {{ stat.percentage }}%</div>
+              </div>
+            }
           </div>
-        </div>
-        <ng-template #noData><p class="no-data">No course data available.</p></ng-template>
+        } @else {
+          <p class="no-data">No course data available.</p>
+        }
       </article>
     </div>
 
@@ -230,23 +234,25 @@
               <th>Name</th>
               <th>Category</th>
               <th>Instructor</th>
-              <th>Price</th>
+              <th>PDF</th>
               <th>Students</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let course of filteredCourses">
-              <td>{{ course.name }}</td>
-              <td>{{ course.category }}</td>
-              <td>{{ course.instructor }}</td>
-              <td>{{ course.price }} TND</td>
-              <td>{{ course.students_enrolled }}</td>
-              <td class="row-actions">
-                <button class="edit-btn" (click)="startEditCourse(course)">Edit</button>
-                <button class="delete-btn" (click)="deleteCourse(course)">Delete</button>
-              </td>
-            </tr>
+            @for (course of filteredCourses; track course) {
+              <tr>
+                <td>{{ course.name }}</td>
+                <td>{{ course.category }}</td>
+                <td>{{ course.instructor }}</td>
+                <td>{{ course.pdf_url ? 'Yes' : 'No' }}</td>
+                <td>{{ course.students_enrolled }}</td>
+                <td class="row-actions">
+                  <button class="edit-btn" (click)="startEditCourse(course)">Edit</button>
+                  <button class="delete-btn" (click)="deleteCourse(course)">Delete</button>
+                </td>
+              </tr>
+            }
           </tbody>
         </table>
       </div>

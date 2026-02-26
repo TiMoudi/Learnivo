@@ -9,18 +9,18 @@ import { Course } from '../models/course.model';
 import { StudentProgress, CourseNotification } from '../models/progress.model';
 
 @Component({
-  selector: 'app-courses',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './courses.component.html',
-  styleUrls: ['./courses.component.css']
+    selector: 'app-courses',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './courses.component.html',
+    styleUrls: ['./courses.component.css']
 })
 export class CoursesComponent implements OnInit {
+  isAdmin = localStorage.getItem('role') === 'admin';
   courses: Course[] = [];
   filteredCourses: Course[] = [];
   selectedCourseId: number | null = null;
   phoneCountry = 'TN'; // Default to Tunisia
-  studentId = 'student_001'; // Mock student ID
+  studentId = this.getOrCreateStudentId();
   
   studentProgress: StudentProgress[] = [];
   notifications: CourseNotification[] = [];
@@ -32,8 +32,9 @@ export class CoursesComponent implements OnInit {
   showImportPanel = false;
   importMessage = '';
   selectedCourseForExport: number | null = null;
+  selectedRatings: Record<number, number> = {};
   searchTerm = '';
-  sortCriteria: 'name' | 'price' | 'rating' | 'students_enrolled' | 'category' = 'name';
+  sortCriteria: 'name' | 'rating' | 'students_enrolled' | 'category' = 'name';
   sortDirection: 'asc' | 'desc' = 'asc';
 
   onSelectCourseForExport(event: any) {
@@ -65,6 +66,17 @@ export class CoursesComponent implements OnInit {
     private imageImportService: ImageImportService
   ) {}
 
+  private getOrCreateStudentId(): string {
+    const existingId = localStorage.getItem('student_id');
+    if (existingId) {
+      return existingId;
+    }
+
+    const generatedId = `student_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+    localStorage.setItem('student_id', generatedId);
+    return generatedId;
+  }
+
   ngOnInit() {
     this.loadCourses();
     this.loadNotifications();
@@ -75,6 +87,10 @@ export class CoursesComponent implements OnInit {
     this.courseApiService.getCourses().subscribe(
       (courses: Course[]) => {
         this.courses = courses;
+        this.selectedRatings = courses.reduce((acc, course) => {
+          acc[course.id] = 5;
+          return acc;
+        }, {} as Record<number, number>);
         this.applyFilters();
       }
     );
@@ -110,7 +126,7 @@ export class CoursesComponent implements OnInit {
 
   private getSortableValue(
     course: Course,
-    criteria: 'name' | 'price' | 'rating' | 'students_enrolled' | 'category'
+    criteria: 'name' | 'rating' | 'students_enrolled' | 'category'
   ): string | number {
     return course[criteria] ?? '';
   }
@@ -170,6 +186,23 @@ export class CoursesComponent implements OnInit {
       this.courseService.updateStudentProgress(this.studentId, courseId, completedModules, course.lessons);
       this.loadStudentProgress();
     }
+  }
+
+  submitRating(courseId: number) {
+    const ratingValue = this.selectedRatings[courseId];
+    if (!ratingValue || ratingValue < 1 || ratingValue > 5) {
+      alert('Please choose a rating between 1 and 5.');
+      return;
+    }
+
+    this.courseApiService.rateCourse(courseId, this.studentId, ratingValue).subscribe({
+      next: () => {
+        this.loadCourses();
+      },
+      error: () => {
+        alert('Unable to submit rating. Please try again.');
+      }
+    });
   }
 
   getProgressForCourse(courseId: number): StudentProgress | undefined {
