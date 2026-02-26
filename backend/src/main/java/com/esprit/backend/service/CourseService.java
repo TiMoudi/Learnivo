@@ -58,6 +58,18 @@ public class CourseService {
         return created;
     }
 
+    public Course updateCoursePdf(Long courseId, MultipartFile pdfFile) throws IOException {
+        Optional<Course> courseOpt = courseRepository.findById(courseId);
+        if (courseOpt.isEmpty()) {
+            return null;
+        }
+
+        Course course = courseOpt.get();
+        String storedFileName = storePdfFile(pdfFile);
+        course.setPdfUrl("/api/courses/" + course.getId() + "/pdf?file=" + storedFileName);
+        return courseRepository.save(course);
+    }
+
     // Mettre a jour un cours (supporte les updates partiels)
     public Course updateCourse(Long id, Course courseDetails) {
         return courseRepository.findById(id).map(course -> {

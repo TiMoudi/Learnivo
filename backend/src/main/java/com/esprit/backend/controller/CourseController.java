@@ -111,6 +111,31 @@ public class CourseController {
         return ResponseEntity.notFound().build();
     }
 
+    @PutMapping(value = "/{id}/pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Course> updateCoursePdf(@PathVariable Long id, @RequestPart("pdfFile") MultipartFile pdfFile) {
+        try {
+            if (pdfFile == null || pdfFile.isEmpty()) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            String contentType = pdfFile.getContentType();
+            boolean isPdf = MediaType.APPLICATION_PDF_VALUE.equalsIgnoreCase(contentType)
+                    || (pdfFile.getOriginalFilename() != null
+                    && pdfFile.getOriginalFilename().toLowerCase().endsWith(".pdf"));
+            if (!isPdf) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            Course updatedCourse = courseService.updateCoursePdf(id, pdfFile);
+            if (updatedCourse == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(updatedCourse);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
         courseService.deleteCourse(id);

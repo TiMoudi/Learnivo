@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { CourseService } from '../services/course.service';
 import { CourseApiService } from '../services/course-api.service';
 import { ExportService } from '../services/export.service';
@@ -18,7 +19,6 @@ export class CoursesComponent implements OnInit {
   isAdmin = localStorage.getItem('role') === 'admin';
   courses: Course[] = [];
   filteredCourses: Course[] = [];
-  selectedCourseId: number | null = null;
   phoneCountry = 'TN'; // Default to Tunisia
   studentId = this.getOrCreateStudentId();
   
@@ -60,6 +60,7 @@ export class CoursesComponent implements OnInit {
   };
 
   constructor(
+    private router: Router,
     private courseService: CourseService,
     private courseApiService: CourseApiService,
     private exportService: ExportService,
@@ -151,8 +152,8 @@ export class CoursesComponent implements OnInit {
   selectCourse(courseId: number) {
     const course = this.courses.find(c => c.id === courseId);
     if (course) {
-      this.selectedCourseId = courseId;
       this.formData.course = course.name;
+      this.router.navigate(['/courses', courseId]);
     }
   }
 
@@ -216,7 +217,6 @@ export class CoursesComponent implements OnInit {
 
   resetForm() {
     this.formData = { fullName: '', email: '', phone: '', level: '', course: '', message: '' };
-    this.selectedCourseId = null;
   }
 
   formatPhoneInput() {

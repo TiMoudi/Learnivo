@@ -58,6 +58,7 @@ export class DashboardComponent implements OnInit {
   };
   newCourseSubmitted = false;
   newCourseErrors: Partial<Record<keyof CourseForm, string>> = {};
+  selectedNewCourseImageFile: File | null = null;
   selectedNewCoursePdfFile: File | null = null;
 
   editCourseForm: CourseForm & { id: number } = {
@@ -138,7 +139,7 @@ export class DashboardComponent implements OnInit {
       instructor: this.newCourseForm.instructor,
       students_enrolled: 0,
       rating: 0,
-      image_url: this.newCourseForm.image_url || 'assets/img/portfolio/thumbnails/1.jpg',
+      image_url: this.newCourseForm.image_url,
       lessons: this.newCourseForm.lessons,
       language: 'English',
       certificate: true,
@@ -228,6 +229,7 @@ export class DashboardComponent implements OnInit {
       image_url: '',
       pdf_url: ''
     };
+    this.selectedNewCourseImageFile = null;
     this.selectedNewCoursePdfFile = null;
     this.newCourseSubmitted = false;
     this.newCourseErrors = {};
@@ -254,7 +256,9 @@ export class DashboardComponent implements OnInit {
 
     const reader = new FileReader();
     reader.onload = () => {
+      this.selectedNewCourseImageFile = file;
       this.newCourseForm.image_url = String(reader.result ?? '');
+      this.newCourseErrors.image_url = '';
       this.onNewCourseFieldChange();
     };
     reader.readAsDataURL(file);
@@ -327,27 +331,21 @@ export class DashboardComponent implements OnInit {
       errors.lessons = 'Lessons must be less than or equal to 500.';
     }
 
-    if (this.newCourseForm.description.length > 500) {
+    if (!this.newCourseForm.description) {
+      errors.description = 'Description is required.';
+    } else if (this.newCourseForm.description.length > 500) {
       errors.description = 'Description must not exceed 500 characters.';
     }
 
-    if (this.newCourseForm.image_url && !this.isValidImageValue(this.newCourseForm.image_url)) {
-      errors.image_url = 'Image must be a valid URL or uploaded image file.';
+    if (!this.selectedNewCourseImageFile || !this.newCourseForm.image_url.startsWith('data:image/')) {
+      errors.image_url = 'Please upload an image file.';
     }
-    if (this.newCourseForm.pdf_url && !this.selectedNewCoursePdfFile) {
+    if (!this.selectedNewCoursePdfFile) {
       errors.pdf_url = 'Please upload a PDF file.';
     }
 
     this.newCourseErrors = errors;
     return Object.keys(errors).length === 0;
-  }
-
-  private isValidImageValue(value: string): boolean {
-    if (value.startsWith('data:image/')) {
-      return true;
-    }
-
-    return /^(https?:\/\/|assets\/).+/i.test(value);
   }
 
   private getSortableValue(

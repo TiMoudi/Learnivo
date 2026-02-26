@@ -21,6 +21,13 @@ export class CourseApiService {
     );
   }
 
+  getCourseById(id: number): Observable<Course | undefined> {
+    return this.http.get<Course>(`${this.apiUrl}/${id}`).pipe(
+      map((course) => course),
+      catchError(() => this.courseService.getCourseById(id).pipe(take(1)))
+    );
+  }
+
   addCourse(course: Omit<Course, 'id'>, pdfFile?: File): Observable<Course> {
     const formData = new FormData();
     formData.append('course', JSON.stringify(course));
@@ -47,6 +54,12 @@ export class CourseApiService {
         return this.courseService.getCourseById(id).pipe(take(1));
       })
     );
+  }
+
+  uploadCoursePdf(id: number, pdfFile: File): Observable<Course> {
+    const formData = new FormData();
+    formData.append('pdfFile', pdfFile);
+    return this.http.put<Course>(`${this.apiUrl}/${id}/pdf`, formData);
   }
 
   deleteCourse(id: number): Observable<void> {
