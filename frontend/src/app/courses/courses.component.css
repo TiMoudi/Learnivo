@@ -1,0 +1,69 @@
+/* Courses Component Styles */
+
+:root {
+  --primary-color: #2D5757;
+  --secondary-color: #F7EDE2;
+  --dark-shade: #1f3f3f;
+  --light-accent: #d4e5e5;
+}
+
+/* Course Cards Responsive */
+@media (max-width: 768px) {
+  .course-card {
+    margin-bottom: 15px;
+  }
+}
+
+/* Smooth transitions */
+* {
+  transition: all 0.3s ease;
+}
+
+input, select, textarea {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(45, 87, 87, 0.1);
+}
+
+/* Button Styles */
+button {
+  transition: all 0.3s ease;
+}
+
+button[type="submit"] {
+  background-color: var(--primary-color) !important;
+}
+
+button[type="submit"]:hover {
+  background-color: var(--dark-shade) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(45, 87, 87, 0.2);
+}
+
+button[type="submit"]:active {
+  transform: translateY(0);
+}
+
+button[type="button"] {
+  transition: all 0.3s ease;
+}
+
+button[type="button"]:hover {
+  background-color: var(--secondary-color) !important;
+  transform: translateY(-2px);
+}
+
+/* Back to Home Link */
+a {
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  background-color: var(--secondary-color) !important;
+  color: var(--primary-color) !important;
+}
+
